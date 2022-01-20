@@ -3,6 +3,7 @@ import sqlite3
 
 from result_obj.metrics import Metrics
 from result_obj.progress import Progress
+from result_obj.status_handler import StatusHandler
 
 
 class Result:
@@ -14,10 +15,16 @@ class Result:
 
         self.metrics = Metrics(self.db)
         self.progress = Progress(self.db)
+        self.status_handler = StatusHandler(self.db)
         self._result = None
 
-    def _get_path(self):
-        return "/tmp"
+    @property
+    def status(self):
+        return self.status_handler.status
+
+    @status.setter
+    def status(self, value):
+        self.status_handler.set_status(value)
 
     @property
     def result(self):
