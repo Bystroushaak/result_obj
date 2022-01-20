@@ -11,6 +11,7 @@ class Progress:
         self.number_of_items = 0
 
         self._create_tables()
+        self._save_to_db()
 
     @property
     def percent(self):
