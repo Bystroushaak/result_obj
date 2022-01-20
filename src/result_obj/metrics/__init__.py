@@ -16,7 +16,7 @@ class MetricInfo:
 
     def save_to_db(self, cursor):
         cursor.execute(
-            "INSERT INTO Metrics(timestamp, type, value) VALUES (?, ?, ?)",
+            "INSERT INTO Metrics(timestamp, type, value) VALUES(?, ?, ?)",
             (self.timestamp, self.type, self.value),
         )
         metrics_tag_id = cursor.lastrowid
@@ -25,7 +25,7 @@ class MetricInfo:
 
         for key, val in self.tags.items():
             cursor.execute(
-                "INSERT INTO MetricsTags(metrics_id, name, value) VALUES (?, ?, ?)",
+                "INSERT INTO MetricsTags(metrics_id, name, value) VALUES(?, ?, ?)",
                 (metrics_tag_id, key, str(val)),
             )
 
@@ -66,7 +66,7 @@ class Metrics:
                 value TEXT,
                 FOREIGN KEY(metrics_id) REFERENCES Metrics(metrics_id)
             );
-        """
+            """
         )
         cursor.execute(
             """
@@ -76,7 +76,7 @@ class Metrics:
                 type INT,
                 value INT
             );
-        """
+            """
         )
         self._db.commit()
 
