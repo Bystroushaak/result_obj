@@ -1,6 +1,6 @@
 import sqlite3
 
-from result_obj.result_obj import Progress
+from result_obj.progress import Progress
 
 
 def test_progress_percent():
