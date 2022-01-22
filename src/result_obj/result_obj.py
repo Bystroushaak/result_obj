@@ -1,6 +1,11 @@
 #! /usr/bin/env python3
+import time
 import logging
 import sqlite3
+try:
+    from cPickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
+except ImportError:
+    from pickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
 
 from result_obj.metrics import Metrics
 from result_obj.progress import Progress
@@ -15,6 +20,7 @@ class Result:
         self.logger = logger if logger else logging.getLogger()
         if sqlite_path:
             self.db = sqlite3.connect(sqlite_path)
+            self._create_tables()
             self._init_sqlite_logging_handler()
 
         self.metrics = Metrics(self.db)
@@ -39,8 +45,55 @@ class Result:
 
     @property
     def result(self):
-        return
+        if not self.db:
+            return self._result
+
+        cursor = self.db.cursor()
+        cursor.execute("SELECT result FROM Result")
+        result_blob = cursor.fetchone()[0]
+        return self._sqlite_blob_decode(result_blob)
 
     @result.setter
     def result(self, value):
-        pass
+        self._result = value
+        if not self.db:
+            return
+
+        cursor = self.db.cursor()
+        cursor.execute("DELETE FROM Result")
+        cursor.execute(
+            "INSERT INTO Result(result, timestamp) VALUES (?, ?)",
+            (self._sqlite_blob_encode(value), time.time())
+        )
+
+        self.db.commit()
+
+    @staticmethod
+    def _sqlite_blob_encode(obj):
+        return sqlite3.Binary(dumps(obj, protocol=PICKLE_PROTOCOL))
+
+    @staticmethod
+    def _sqlite_blob_decode(obj):
+        return loads(bytes(obj))
+
+    def _create_tables(self):
+        cursor = self.db.cursor()
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS Result(
+                result BLOB,
+                timestamp REAL
+            );
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS RestorePoint(
+                restore_data BLOB,
+                timestamp REAL
+            );
+            """
+        )
+
+        self.db.commit()
