@@ -1,5 +1,3 @@
-import sqlite3
-
 from result_obj.result_obj import ResultObj
 
 
