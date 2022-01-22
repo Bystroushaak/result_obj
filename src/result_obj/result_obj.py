@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+import sys
 import time
 import logging
 import sqlite3
@@ -25,6 +25,7 @@ class ResultObj:
             self.db = sqlite3.connect(sqlite_path)
             self._create_tables()
             self._init_sqlite_logging_handler()
+            self._save_debug_data()
 
         self.metrics = Metrics(self.db)
         self.progress = Progress(self.db)
@@ -120,7 +121,9 @@ class ResultObj:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS Metadata(
-                version TEXT
+                version TEXT,
+                argv TEXT,
+                timestamp REAL
             );
             """
         )
@@ -141,6 +144,22 @@ class ResultObj:
             """
         )
 
-        cursor.execute("INSERT INTO Metadata(version) VALUES(?)", (self.VERSION,))
+        self.db.commit()
 
+    def _save_debug_data(self):
+        cursor = self.db.cursor()
+        cursor.execute(
+            """
+            INSERT INTO Metadata(
+                version,
+                argv,
+                timestamp
+            ) VALUES(?, ?, ?)
+            """,
+            (
+                self.VERSION,
+                str(sys.argv),
+                time.time(),
+            )
+        )
         self.db.commit()
