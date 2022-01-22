@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import logging
@@ -7,6 +8,8 @@ try:
     from cPickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
 except ImportError:
     from pickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
+
+import psutil
 
 from result_obj.metrics import Metrics
 from result_obj.progress import Progress
@@ -78,6 +81,7 @@ class ResultObj:
         )
 
         self.db.commit()
+        self._save_debug_data()
 
     @property
     def result(self):
@@ -106,6 +110,7 @@ class ResultObj:
         )
 
         self.db.commit()
+        self._save_debug_data()
 
     @staticmethod
     def _sqlite_blob_encode(obj):
@@ -121,9 +126,16 @@ class ResultObj:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS Metadata(
+                timestamp REAL,
                 version TEXT,
                 argv TEXT,
-                timestamp REAL
+                pwd TEXT,
+                mem_total INT,
+                mem_free INT,
+                mem_percent REAL,
+                disc_total INT,
+                disc_free INT,
+                disc_percent REAL
             );
             """
         )
@@ -148,18 +160,35 @@ class ResultObj:
 
     def _save_debug_data(self):
         cursor = self.db.cursor()
+
+        mem_info = psutil.virtual_memory()
+        disc_info = psutil.disk_usage(os.getcwd())
         cursor.execute(
             """
             INSERT INTO Metadata(
+                timestamp,
                 version,
                 argv,
-                timestamp
-            ) VALUES(?, ?, ?)
+                pwd,
+                mem_total,
+                mem_free,
+                mem_percent,
+                disc_total,
+                disc_free,
+                disc_percent
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
+                time.time(),
                 self.VERSION,
                 str(sys.argv),
-                time.time(),
+                os.getcwd(),
+                mem_info.total,
+                mem_info.available,
+                mem_info.percent,
+                disc_info.total,
+                disc_info.free,
+                disc_info.percent,
             )
         )
         self.db.commit()
