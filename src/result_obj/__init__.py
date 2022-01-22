@@ -1,3 +1,1 @@
-#! /usr/bin/env python3
-
-
+from result_obj.result_obj import ResultObj

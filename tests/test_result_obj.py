@@ -1,6 +1,6 @@
 import sqlite3
 
-from result_obj.result_obj import Result
+from result_obj.result_obj import ResultObj
 
 
 class Obj:
@@ -12,7 +12,7 @@ class Obj:
 
 
 def test_store_result():
-    result_obj = Result(":memory:")
+    result_obj = ResultObj(":memory:")
 
     result_obj.result = Obj(1)
     assert result_obj.result.get_value() == 1
@@ -28,13 +28,13 @@ def test_store_result():
 
 
 def test_empty_result():
-    result_obj = Result(":memory:")
+    result_obj = ResultObj(":memory:")
 
     assert not result_obj.result
 
 
 def test_store_restore_point():
-    result_obj = Result(":memory:")
+    result_obj = ResultObj(":memory:")
 
     result_obj.restore_point = Obj(1)
     assert result_obj.restore_point.get_value() == 1
@@ -49,6 +49,6 @@ def test_store_restore_point():
 
 
 def test_empty_restore_point():
-    result_obj = Result(":memory:")
+    result_obj = ResultObj(":memory:")
 
     assert not result_obj.restore_point

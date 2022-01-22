@@ -2,6 +2,7 @@
 import time
 import logging
 import sqlite3
+
 try:
     from cPickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
 except ImportError:
@@ -13,8 +14,9 @@ from result_obj.status_handler import StatusHandler
 from result_obj.logging_handler import SqliteHandler
 
 
-class Result:
+class ResultObj:
     VERSION = "1.0.0"
+
     def __init__(self, sqlite_path=None, logger=None):
         self.path = sqlite_path
         self.db = None
@@ -32,9 +34,11 @@ class Result:
 
     def _init_sqlite_logging_handler(self):
         handler = SqliteHandler(logging.DEBUG, self.db)
-        handler.setFormatter(logging.Formatter(
-            "%(asctime)s %(levelname)s %(filename)s:%(lineno)s; %(message)s"
-        ))
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s %(filename)s:%(lineno)s; %(message)s"
+            )
+        )
         self.logger.addHandler(handler)
 
     @property
@@ -69,7 +73,7 @@ class Result:
         cursor = self.db.cursor()
         cursor.execute(
             "INSERT INTO RestorePoint(restore_data, timestamp) VALUES (?, ?)",
-            (self._sqlite_blob_encode(value), time.time())
+            (self._sqlite_blob_encode(value), time.time()),
         )
 
         self.db.commit()
@@ -97,7 +101,7 @@ class Result:
         cursor.execute("DELETE FROM Result")
         cursor.execute(
             "INSERT INTO Result(result, timestamp) VALUES (?, ?)",
-            (self._sqlite_blob_encode(value), time.time())
+            (self._sqlite_blob_encode(value), time.time()),
         )
 
         self.db.commit()
@@ -137,9 +141,6 @@ class Result:
             """
         )
 
-        cursor.execute(
-            "INSERT INTO Metadata(version) VALUES(?)",
-            (self.VERSION,)
-        )
+        cursor.execute("INSERT INTO Metadata(version) VALUES(?)", (self.VERSION,))
 
         self.db.commit()
