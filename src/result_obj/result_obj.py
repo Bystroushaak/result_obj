@@ -27,6 +27,7 @@ class Result:
         self.progress = Progress(self.db)
         self.status_handler = StatusHandler(self.db)
         self._result = None
+        self._restore_point = None
 
     def _init_sqlite_logging_handler(self):
         handler = SqliteHandler(logging.DEBUG, self.db)
@@ -44,14 +45,46 @@ class Result:
         self.status_handler.set_status(value)
 
     @property
+    def restore_point(self):
+        if not self.db:
+            return self._restore_point
+
+        cursor = self.db.cursor()
+        cursor.execute(
+            "SELECT restore_data FROM RestorePoint ORDER BY timestamp DESC LIMIT 1;"
+        )
+        data = cursor.fetchone()
+        if not data:
+            return None
+
+        return self._sqlite_blob_decode(data[0])
+
+    @restore_point.setter
+    def restore_point(self, value):
+        self._restore_point = value
+        if not self.db:
+            return
+
+        cursor = self.db.cursor()
+        cursor.execute(
+            "INSERT INTO RestorePoint(restore_data, timestamp) VALUES (?, ?)",
+            (self._sqlite_blob_encode(value), time.time())
+        )
+
+        self.db.commit()
+
+    @property
     def result(self):
         if not self.db:
             return self._result
 
         cursor = self.db.cursor()
         cursor.execute("SELECT result FROM Result")
-        result_blob = cursor.fetchone()[0]
-        return self._sqlite_blob_decode(result_blob)
+        data = cursor.fetchone()
+        if not data:
+            return None
+
+        return self._sqlite_blob_decode(data[0])
 
     @result.setter
     def result(self, value):
