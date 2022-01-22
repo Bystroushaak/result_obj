@@ -14,6 +14,7 @@ from result_obj.logging_handler import SqliteHandler
 
 
 class Result:
+    VERSION = "1.0.0"
     def __init__(self, sqlite_path=None, logger=None):
         self.path = sqlite_path
         self.db = None
@@ -114,6 +115,13 @@ class Result:
 
         cursor.execute(
             """
+            CREATE TABLE IF NOT EXISTS Metadata(
+                version TEXT
+            );
+            """
+        )
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS Result(
                 result BLOB,
                 timestamp REAL
@@ -127,6 +135,11 @@ class Result:
                 timestamp REAL
             );
             """
+        )
+
+        cursor.execute(
+            "INSERT INTO Metadata(version) VALUES(?)",
+            (self.VERSION,)
         )
 
         self.db.commit()
