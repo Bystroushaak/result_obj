@@ -25,7 +25,9 @@ class ResultObj:
     progress: Progress
     status_handler: StatusHandler
     _sqlite_logging_handler: Optional[MemoryHandler]
+
     VERSION = "1.0.0"
+    LOG_FMT = "%(asctime)s %(levelname)s %(filename)s:%(lineno)s; %(message)s"
 
     def __init__(self, sqlite_path=None, logger=None):
         self.path = sqlite_path
@@ -49,14 +51,29 @@ class ResultObj:
 
     def _init_sqlite_logging_handler(self):
         sqlite_handler = SqliteHandler(logging.DEBUG, self.db)
-        sqlite_handler.setFormatter(
-            logging.Formatter(
-                "%(asctime)s %(levelname)s %(filename)s:%(lineno)s; %(message)s"
-            )
-        )
+        sqlite_handler.setFormatter(logging.Formatter(self.LOG_FMT))
         self._sqlite_logging_handler = MemoryHandler(10)
         self._sqlite_logging_handler.setTarget(sqlite_handler)
         self.logger.addHandler(self._sqlite_logging_handler)
+        self.logger.setLevel(logging.DEBUG)
+
+    def add_handler(self, handler):
+        self.logger.addHandler(handler)
+
+    def add_stdout_handler(self, fmt=None, level=logging.INFO):
+        stream_handler = logging.StreamHandler(sys.stdout)
+        fmt = logging.Formatter(fmt if fmt else self.LOG_FMT)
+        stream_handler.setFormatter(fmt)
+        stream_handler.setLevel(level)
+        self.logger.addHandler(stream_handler)
+        self.logger.setLevel(logging.DEBUG)
+
+    def add_stderr_handler(self, fmt=None, level=logging.INFO):
+        stream_handler = logging.StreamHandler(sys.stderr)
+        fmt = logging.Formatter(fmt if fmt else self.LOG_FMT)
+        stream_handler.setFormatter(fmt)
+        stream_handler.setLevel(level)
+        self.logger.addHandler(stream_handler)
         self.logger.setLevel(logging.DEBUG)
 
     @property
