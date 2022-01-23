@@ -248,3 +248,6 @@ class ResultObj:
         self.db.commit()
 
         self._debug_data_stored = True
+
+    def __del__(self):
+        self._sqlite_logging_handler.flush()
