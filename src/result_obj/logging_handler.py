@@ -3,7 +3,11 @@ import logging
 
 
 class SqliteHandler(logging.Handler):
-    def __init__(self, level, db, flush_after=100):
+    """
+    Handler which logs into SQLite `db`. Cacheing is handled by external
+    MemoryHandler in the result obj.
+    """
+    def __init__(self, level, db):
         super().__init__(level=level)
 
         self.db = db

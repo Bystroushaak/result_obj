@@ -5,6 +5,7 @@ import json
 import logging
 import sqlite3
 from typing import Optional
+from logging.handlers import MemoryHandler
 
 try:
     from cPickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
@@ -23,7 +24,7 @@ class ResultObj:
     metrics: Metrics
     progress: Progress
     status_handler: StatusHandler
-    _logging_handler: Optional[SqliteHandler]
+    _logging_handler: Optional[MemoryHandler]
     VERSION = "1.0.0"
 
     def __init__(self, sqlite_path=None, logger=None):
@@ -46,12 +47,14 @@ class ResultObj:
         self._restore_point = None
 
     def _init_sqlite_logging_handler(self):
-        self._logging_handler = SqliteHandler(logging.DEBUG, self.db)
-        self._logging_handler.setFormatter(
+        sqlite_handler = SqliteHandler(logging.DEBUG, self.db)
+        sqlite_handler.setFormatter(
             logging.Formatter(
                 "%(asctime)s %(levelname)s %(filename)s:%(lineno)s; %(message)s"
             )
         )
+        self._logging_handler = MemoryHandler(10)
+        self._logging_handler.setTarget(sqlite_handler)
         self.logger.addHandler(self._logging_handler)
         self.logger.setLevel(logging.DEBUG)
 
@@ -91,8 +94,8 @@ class ResultObj:
         )
 
         self.db.commit()
+        self._logging_handler.flush()
         self._save_debug_data()
-        self._logging_handler._store_buffer()
 
     @property
     def result(self):
@@ -121,8 +124,8 @@ class ResultObj:
         )
 
         self.db.commit()
+        self._logging_handler.flush()
         self._save_debug_data()
-        self._logging_handler._store_buffer()
 
     @staticmethod
     def _sqlite_blob_encode(obj):
@@ -202,10 +205,9 @@ class ResultObj:
                 disc_info.total,
                 disc_info.free,
                 disc_info.percent,
-            )
+            ),
         )
         self.db.commit()
-
 
     def _first_time_debug_data(self):
         cursor = self.db.cursor()
@@ -240,7 +242,7 @@ class ResultObj:
                 disc_info.total,
                 disc_info.free,
                 disc_info.percent,
-            )
+            ),
         )
         self.db.commit()
 
