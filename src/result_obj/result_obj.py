@@ -31,6 +31,8 @@ class ResultObj:
         self.db = None
         self.logger = logger if logger else logging.getLogger()
         self._logging_handler = None
+        self._debug_data_stored = False
+
         if sqlite_path:
             self.db = sqlite3.connect(sqlite_path)
             self._create_tables()
@@ -42,7 +44,6 @@ class ResultObj:
         self.status_handler = StatusHandler(self.db)
         self._result = None
         self._restore_point = None
-        self._debug_data_stored = False
 
     def _init_sqlite_logging_handler(self):
         self._logging_handler = SqliteHandler(logging.DEBUG, self.db)
