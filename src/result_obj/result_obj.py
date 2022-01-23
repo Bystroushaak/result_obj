@@ -53,6 +53,7 @@ class ResultObj:
             )
         )
         self.logger.addHandler(self._logging_handler)
+        self.logger.setLevel(logging.DEBUG)
 
     @property
     def status(self):
