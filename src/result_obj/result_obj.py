@@ -25,6 +25,7 @@ class ResultObj:
         self.path = sqlite_path
         self.db = None
         self.logger = logger if logger else logging.getLogger()
+        self._logging_handler = None
         if sqlite_path:
             self.db = sqlite3.connect(sqlite_path)
             self._create_tables()
@@ -39,13 +40,13 @@ class ResultObj:
         self._debug_data_stored = False
 
     def _init_sqlite_logging_handler(self):
-        handler = SqliteHandler(logging.DEBUG, self.db)
-        handler.setFormatter(
+        self._logging_handler = SqliteHandler(logging.DEBUG, self.db)
+        self._logging_handler.setFormatter(
             logging.Formatter(
                 "%(asctime)s %(levelname)s %(filename)s:%(lineno)s; %(message)s"
             )
         )
-        self.logger.addHandler(handler)
+        self.logger.addHandler(self._logging_handler)
 
     @property
     def status(self):
@@ -84,6 +85,7 @@ class ResultObj:
 
         self.db.commit()
         self._save_debug_data()
+        self._logging_handler._store_buffer()
 
     @property
     def result(self):
@@ -113,6 +115,7 @@ class ResultObj:
 
         self.db.commit()
         self._save_debug_data()
+        self._logging_handler._store_buffer()
 
     @staticmethod
     def _sqlite_blob_encode(obj):
