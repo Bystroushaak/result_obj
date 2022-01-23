@@ -2,13 +2,20 @@ from result_obj.result_obj import ResultObj
 
 
 def test_logging_handler():
-    result = ResultObj(":memory:")
-    # result._logging_handler._flush_after = 1
+    result_obj = ResultObj(":memory:")
 
-    result.logger.info("Test")
-    result.logger.debug("Test")
+    result_obj.logger.info("Test")
+    result_obj.logger.debug("Test")
 
-    cursor = result.db.cursor()
+    cursor = result_obj.db.cursor()
+    cursor.execute("SELECT * FROM Logs")
+    data = cursor.fetchall()
+
+    assert len(data) == 0
+
+    result_obj._logging_handler.flush()
+
+    cursor = result_obj.db.cursor()
     cursor.execute("SELECT * FROM Logs")
     data = cursor.fetchall()
 
