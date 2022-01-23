@@ -57,10 +57,10 @@ class ResultObj:
         self.logger.addHandler(self._sqlite_logging_handler)
         self.logger.setLevel(logging.DEBUG)
 
-    def add_handler(self, handler):
+    def add_logging_handler(self, handler):
         self.logger.addHandler(handler)
 
-    def add_stdout_handler(self, fmt=None, level=logging.INFO):
+    def add_stdout_logging_handler(self, fmt=None, level=logging.INFO):
         stream_handler = logging.StreamHandler(sys.stdout)
         fmt = logging.Formatter(fmt if fmt else self.LOG_FMT)
         stream_handler.setFormatter(fmt)
@@ -68,7 +68,7 @@ class ResultObj:
         self.logger.addHandler(stream_handler)
         self.logger.setLevel(logging.DEBUG)
 
-    def add_stderr_handler(self, fmt=None, level=logging.INFO):
+    def add_stderr_logging_handler(self, fmt=None, level=logging.INFO):
         stream_handler = logging.StreamHandler(sys.stderr)
         fmt = logging.Formatter(fmt if fmt else self.LOG_FMT)
         stream_handler.setFormatter(fmt)
