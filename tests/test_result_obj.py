@@ -50,3 +50,26 @@ def test_empty_restore_point():
     result_obj = ResultObj(":memory:")
 
     assert not result_obj.restore_point
+
+
+def _test_all():
+    result_obj = ResultObj("test.sqlite")
+
+    result_obj.metrics.runtime.start()
+
+    result_obj.logger.info("Started")
+    result_obj.status = "Running"
+    result_obj.metrics.hit.increment()
+    result_obj.metrics.value.value(100)
+
+    result_obj.logger.info("Metrics used")
+
+    result_obj.restore_point = 1
+    result_obj.restore_point = 2
+    result_obj.restore_point = 3
+
+    result_obj.result = 1
+
+    result_obj.status = "Finished"
+    result_obj.metrics.runtime.stop()
+    result_obj.logger.info("Stopped")
