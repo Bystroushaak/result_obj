@@ -36,6 +36,7 @@ class ResultObj:
         self.status_handler = StatusHandler(self.db)
         self._result = None
         self._restore_point = None
+        self._debug_data_stored = False
 
     def _init_sqlite_logging_handler(self):
         handler = SqliteHandler(logging.DEBUG, self.db)
@@ -161,6 +162,42 @@ class ResultObj:
         self.db.commit()
 
     def _save_debug_data(self):
+        if not self._debug_data_stored:
+            self._first_time_debug_data()
+            return
+
+        cursor = self.db.cursor()
+
+        mem_info = psutil.virtual_memory()
+        disc_info = psutil.disk_usage(os.getcwd())
+        cursor.execute(
+            """
+            INSERT INTO Metadata(
+                timestamp,
+                pwd,
+                mem_total,
+                mem_free,
+                mem_percent,
+                disc_total,
+                disc_free,
+                disc_percent
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                time.time(),
+                os.getcwd(),
+                mem_info.total,
+                mem_info.available,
+                mem_info.percent,
+                disc_info.total,
+                disc_info.free,
+                disc_info.percent,
+            )
+        )
+        self.db.commit()
+
+
+    def _first_time_debug_data(self):
         cursor = self.db.cursor()
 
         mem_info = psutil.virtual_memory()
@@ -196,3 +233,5 @@ class ResultObj:
             )
         )
         self.db.commit()
+
+        self._debug_data_stored = True
