@@ -13,7 +13,7 @@ def test_logging_handler():
 
     assert len(data) == 0
 
-    result_obj._logging_handler.flush()
+    result_obj._sqlite_logging_handler.flush()
 
     cursor = result_obj.db.cursor()
     cursor.execute("SELECT * FROM Logs")

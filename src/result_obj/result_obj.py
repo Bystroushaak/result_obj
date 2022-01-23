@@ -24,14 +24,15 @@ class ResultObj:
     metrics: Metrics
     progress: Progress
     status_handler: StatusHandler
-    _logging_handler: Optional[MemoryHandler]
+    _sqlite_logging_handler: Optional[MemoryHandler]
     VERSION = "1.0.0"
 
     def __init__(self, sqlite_path=None, logger=None):
         self.path = sqlite_path
         self.db = None
         self.logger = logger if logger else logging.getLogger()
-        self._logging_handler = None
+        self.logger.setLevel(logging.DEBUG)
+        self._sqlite_logging_handler = None
         self._debug_data_stored = False
 
         if sqlite_path:
@@ -53,9 +54,9 @@ class ResultObj:
                 "%(asctime)s %(levelname)s %(filename)s:%(lineno)s; %(message)s"
             )
         )
-        self._logging_handler = MemoryHandler(10)
-        self._logging_handler.setTarget(sqlite_handler)
-        self.logger.addHandler(self._logging_handler)
+        self._sqlite_logging_handler = MemoryHandler(10)
+        self._sqlite_logging_handler.setTarget(sqlite_handler)
+        self.logger.addHandler(self._sqlite_logging_handler)
         self.logger.setLevel(logging.DEBUG)
 
     @property
@@ -94,7 +95,7 @@ class ResultObj:
         )
 
         self.db.commit()
-        self._logging_handler.flush()
+        self._sqlite_logging_handler.flush()
         self._save_debug_data()
 
     @property
@@ -124,7 +125,7 @@ class ResultObj:
         )
 
         self.db.commit()
-        self._logging_handler.flush()
+        self._sqlite_logging_handler.flush()
         self._save_debug_data()
 
     @staticmethod
