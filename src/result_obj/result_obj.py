@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import json
 import logging
 import sqlite3
 
@@ -130,6 +131,7 @@ class ResultObj:
                 version TEXT,
                 argv TEXT,
                 pwd TEXT,
+                env_vars_json TEXT,
                 mem_total INT,
                 mem_free INT,
                 mem_percent REAL,
@@ -170,19 +172,21 @@ class ResultObj:
                 version,
                 argv,
                 pwd,
+                env_vars_json,
                 mem_total,
                 mem_free,
                 mem_percent,
                 disc_total,
                 disc_free,
                 disc_percent
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 time.time(),
                 self.VERSION,
                 str(sys.argv),
                 os.getcwd(),
+                json.dumps(dict(os.environ)),
                 mem_info.total,
                 mem_info.available,
                 mem_info.percent,
