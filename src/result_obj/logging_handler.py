@@ -7,72 +7,54 @@ class SqliteHandler(logging.Handler):
         super().__init__(level=level)
 
         self.db = db
-        self.flush_after = flush_after
-        self.counter = 0
-        self.buffer = []
+        self._create_tables()
 
         def handle_exception(exc_type, exc_value, exc_traceback):
             logger = logging.getLogger()
             logger.critical("Exception %s %s %s", exc_type, exc_value, exc_traceback)
-            self._store_buffer()
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
         sys.excepthook = handle_exception
 
     def emit(self, record):
-        self.buffer.append(record)
-
-        if self.counter >= self.flush_after:
-            self._store_buffer()
-
-    def __del__(self):
-        self._store_buffer()
-
-    def _store_buffer(self):
         cursor = self.db.cursor()
 
-        for record in self.buffer:
-            cursor.execute("""
-                INSERT INTO Logs(
-                    args,
-                    asctime,
-                    created,
-                    filename,
-                    funcName,
-                    levelname,
-                    levelno,
-                    lineno,
-                    msg,
-                    module,
-                    name,
-                    pathname,
-                    process,
-                    processName,
-                    thread,
-                    threadName
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    record.args,
-                    record.asctime,
-                    record.created,
-                    record.filename,
-                    record.funcName,
-                    record.levelname,
-                    record.levelno,
-                    record.lineno,
-                    record.msg,
-                    record.module,
-                    record.name,
-                    record.pathname,
-                    record.process,
-                    record.processName,
-                    record.thread,
-                )
+        cursor.execute("""
+            INSERT INTO Logs(
+                created,
+                filename,
+                funcName,
+                levelname,
+                levelno,
+                lineno,
+                msg,
+                module,
+                name,
+                pathname,
+                process,
+                processName,
+                thread,
+                threadName
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                record.created,
+                record.filename,
+                record.funcName,
+                record.levelname,
+                record.levelno,
+                record.lineno,
+                record.msg % record.args,
+                record.module,
+                record.name,
+                record.pathname,
+                record.process,
+                record.processName,
+                record.thread,
+                record.threadName,
             )
+        )
 
         self.db.commit()
-        self.buffer.clear()
-        self.counter = 0
 
     def _create_tables(self):
         cursor = self.db.cursor()
@@ -80,7 +62,6 @@ class SqliteHandler(logging.Handler):
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS Logs(
-                args TEXT,
                 asctime TEXT,
                 created REAL,
                 filename TEXT,
