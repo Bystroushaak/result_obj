@@ -4,6 +4,7 @@ import time
 import json
 import logging
 import sqlite3
+from typing import Optional
 
 try:
     from cPickle import dumps, loads, HIGHEST_PROTOCOL as PICKLE_PROTOCOL
@@ -19,6 +20,10 @@ from result_obj.logging_handler import SqliteHandler
 
 
 class ResultObj:
+    metrics: Metrics
+    progress: Progress
+    status_handler: StatusHandler
+    _logging_handler: Optional[SqliteHandler]
     VERSION = "1.0.0"
 
     def __init__(self, sqlite_path=None, logger=None):
