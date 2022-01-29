@@ -20,6 +20,11 @@ from result_obj.status_handler import StatusHandler
 from result_obj.logging_handler import SqliteHandler
 
 
+class DataTypes:
+    pickle = "cpython_pickle"
+    binary = "binary"
+
+
 class ResultObj:
     metrics: Metrics
     progress: Progress
@@ -107,8 +112,8 @@ class ResultObj:
 
         cursor = self.db.cursor()
         cursor.execute(
-            "INSERT INTO RestorePoint(restore_data, timestamp) VALUES (?, ?)",
-            (self._sqlite_blob_encode(value), time.time()),
+            "INSERT INTO RestorePoint(timestamp, type, restore_data) VALUES (?, ?, ?)",
+            (time.time(), DataTypes.pickle, self._sqlite_blob_encode(value)),
         )
 
         self.db.commit()
@@ -137,8 +142,8 @@ class ResultObj:
         cursor = self.db.cursor()
         cursor.execute("DELETE FROM Result")
         cursor.execute(
-            "INSERT INTO Result(result, timestamp) VALUES (?, ?)",
-            (self._sqlite_blob_encode(value), time.time()),
+            "INSERT INTO Result(timestamp, type, result) VALUES (?, ?, ?)",
+            (time.time(), DataTypes.pickle, self._sqlite_blob_encode(value)),
         )
 
         self.db.commit()
@@ -176,16 +181,18 @@ class ResultObj:
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS Result(
-                result BLOB,
-                timestamp REAL
+                timestamp REAL,
+                type TEXT,
+                result BLOB
             );
             """
         )
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS RestorePoint(
-                restore_data BLOB,
-                timestamp REAL
+                timestamp REAL,
+                type TEXT,
+                restore_data BLOB
             );
             """
         )
