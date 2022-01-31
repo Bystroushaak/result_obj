@@ -46,9 +46,11 @@ class ResultObj:
             self.db = sqlite3.connect(sqlite_path)
             self._create_tables()
             self._init_sqlite_logging_handler()
+            self.metrics = Metrics(self.db)
             self._save_debug_data()
+        else:
+            self.metrics = Metrics(self.db)
 
-        self.metrics = Metrics(self.db)
         self.progress = Progress(self.db)
         self.status_handler = StatusHandler(self.db)
         self._result = None
@@ -168,13 +170,7 @@ class ResultObj:
                 version TEXT,
                 argv TEXT,
                 pwd TEXT,
-                env_vars_json TEXT,
-                mem_total INT,
-                mem_free INT,
-                mem_percent REAL,
-                disc_total INT,
-                disc_free INT,
-                disc_percent REAL
+                env_vars_json TEXT
             );
             """
         )
@@ -206,39 +202,27 @@ class ResultObj:
 
         cursor = self.db.cursor()
 
-        mem_info = psutil.virtual_memory()
-        disc_info = psutil.disk_usage(os.getcwd())
         cursor.execute(
             """
             INSERT INTO Metadata(
                 timestamp,
-                pwd,
-                mem_total,
-                mem_free,
-                mem_percent,
-                disc_total,
-                disc_free,
-                disc_percent
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+                pwd
+            ) VALUES(?, ?)
             """,
             (
                 time.time(),
                 os.getcwd(),
-                mem_info.total,
-                mem_info.available,
-                mem_info.percent,
-                disc_info.total,
-                disc_info.free,
-                disc_info.percent,
             ),
         )
         self.db.commit()
 
+        self._save_mem_disc_metrics()
+
     def _first_time_debug_data(self):
+        self._save_mem_disc_metrics()
+
         cursor = self.db.cursor()
 
-        mem_info = psutil.virtual_memory()
-        disc_info = psutil.disk_usage(os.getcwd())
         cursor.execute(
             """
             INSERT INTO Metadata(
@@ -246,14 +230,8 @@ class ResultObj:
                 version,
                 argv,
                 pwd,
-                env_vars_json,
-                mem_total,
-                mem_free,
-                mem_percent,
-                disc_total,
-                disc_free,
-                disc_percent
-            ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                env_vars_json
+            ) VALUES(?, ?, ?, ?, ?)
             """,
             (
                 time.time(),
@@ -261,17 +239,22 @@ class ResultObj:
                 str(sys.argv),
                 os.getcwd(),
                 json.dumps(dict(os.environ)),
-                mem_info.total,
-                mem_info.available,
-                mem_info.percent,
-                disc_info.total,
-                disc_info.free,
-                disc_info.percent,
             ),
         )
         self.db.commit()
 
         self._debug_data_stored = True
+
+    def _save_mem_disc_metrics(self):
+        mem_info = psutil.virtual_memory()
+        self.metrics._mem_total = mem_info.total
+        self.metrics._mem_available = mem_info.available
+        self.metrics._mem_percent = mem_info.percent
+
+        disc_info = psutil.disk_usage(os.getcwd())
+        self.metrics._disc_total = disc_info.total
+        self.metrics._disc_free = disc_info.free
+        self.metrics._disc_percent = disc_info.percent
 
     def __del__(self):
         self._sqlite_logging_handler.flush()
