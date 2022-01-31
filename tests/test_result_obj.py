@@ -1,3 +1,6 @@
+import os
+import os.path
+
 from result_obj.result_obj import ResultObj
 
 
@@ -53,6 +56,9 @@ def test_empty_restore_point():
 
 
 def _test_all():
+    if os.path.exists("test.sqlite"):
+        os.unlink("test.sqlite")
+
     result_obj = ResultObj("test.sqlite")
 
     result_obj.metrics.runtime.start()

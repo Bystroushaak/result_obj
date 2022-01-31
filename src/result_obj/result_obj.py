@@ -169,8 +169,15 @@ class ResultObj:
                 timestamp REAL,
                 version TEXT,
                 argv TEXT,
-                pwd TEXT,
-                env_vars_json TEXT
+                pwd TEXT
+            );
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS MetadataEnvVars(
+                key TEXT,
+                value TEXT
             );
             """
         )
@@ -229,18 +236,27 @@ class ResultObj:
                 timestamp,
                 version,
                 argv,
-                pwd,
-                env_vars_json
-            ) VALUES(?, ?, ?, ?, ?)
+                pwd
+            ) VALUES(?, ?, ?, ?)
             """,
             (
                 time.time(),
                 self.VERSION,
                 str(sys.argv),
                 os.getcwd(),
-                json.dumps(dict(os.environ)),
             ),
         )
+
+        cursor.executemany(
+            """
+            INSERT INTO MetadataEnvVars(
+                key,
+                value
+            ) VALUES (?, ?)
+            """,
+            ((key, val) for key, val in os.environ.items())
+        )
+
         self.db.commit()
 
         self._debug_data_stored = True
