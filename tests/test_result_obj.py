@@ -79,3 +79,34 @@ def _test_all():
     result_obj.status = "Finished"
     result_obj.metrics.runtime.stop()
     result_obj.logger.info("Stopped")
+
+
+def test_all_bigger():
+    if os.path.exists("test.sqlite"):
+        os.unlink("test.sqlite")
+
+    result_obj = ResultObj("test.sqlite")
+
+    result_obj.metrics.runtime.start()
+
+    result_obj.logger.info("Started")
+    result_obj.status = "Running"
+
+    for _ in range(1000):
+        result_obj.metrics.hit.increment()
+        result_obj.metrics.value.value(100)
+
+    result_obj.logger.info("Metrics used")
+
+    for _ in range(1000):
+        result_obj.logger.info("Test")
+
+    result_obj.restore_point = 1
+    result_obj.restore_point = 2
+    result_obj.restore_point = 3
+
+    result_obj.result = Obj(1)
+
+    result_obj.status = "Finished"
+    result_obj.metrics.runtime.stop()
+    result_obj.logger.info("Stopped")
