@@ -1,5 +1,6 @@
 import os
 import os.path
+import random
 
 from result_obj.result_obj import ResultObj
 
@@ -94,7 +95,7 @@ def test_all_bigger():
 
     for _ in range(1000):
         result_obj.metrics.hit.increment()
-        result_obj.metrics.value.value(100)
+        result_obj.metrics.value.value(random.randint(0, 100))
 
     result_obj.logger.info("Metrics used")
 
