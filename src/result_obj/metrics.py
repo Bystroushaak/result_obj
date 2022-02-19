@@ -6,18 +6,19 @@ from dataclasses import dataclass
 
 @dataclass
 class MetricInfo:
+    timestamp: float = field(init=False)
     type: int
+    name: str
     tags: dict
     value: Any = None
-    timestamp: float = field(init=False)
 
     def __post_init__(self):
         self.timestamp = time.time()
 
     def save_to_db(self, cursor):
         cursor.execute(
-            "INSERT INTO Metrics(timestamp, type, value) VALUES(?, ?, ?)",
-            (self.timestamp, self.type, self.value),
+            "INSERT INTO Metrics(timestamp, name, type, value) VALUES(?, ?, ?, ?)",
+            (self.timestamp, self.name, self.type, self.value),
         )
         metrics_tag_id = cursor.lastrowid
         if not self.tags:
@@ -25,7 +26,7 @@ class MetricInfo:
 
         for key, val in self.tags.items():
             cursor.execute(
-                "INSERT INTO MetricsTags(metrics_id, name, value) VALUES(?, ?, ?)",
+                "INSERT INTO MetricsTags(metrics_id, key, value) VALUES(?, ?, ?)",
                 (metrics_tag_id, key, str(val)),
             )
 
@@ -62,7 +63,7 @@ class Metrics:
             """
             CREATE TABLE IF NOT EXISTS MetricsTags(
                 metrics_id INT PRIMARY KEY,
-                name TEXT,
+                key TEXT,
                 value TEXT,
                 FOREIGN KEY(metrics_id) REFERENCES Metrics(metrics_id)
             );
@@ -74,6 +75,7 @@ class Metrics:
                 metrics_id int PRIMARY KEY,
                 timestamp real,
                 type INT,
+                name TEXT,
                 value INT
             );
             """
@@ -96,13 +98,13 @@ class Metric:
         self.metrics = metrics
 
     def start(self, **kwargs):
-        self.metrics.add_to_stream(MetricInfo(self.TYPE_START, kwargs))
+        self.metrics.add_to_stream(MetricInfo(self.TYPE_START, self.name, kwargs))
 
     def stop(self, **kwargs):
-        self.metrics.add_to_stream(MetricInfo(self.TYPE_STOP, kwargs))
+        self.metrics.add_to_stream(MetricInfo(self.TYPE_STOP, self.name, kwargs))
 
     def increment(self, **kwargs):
-        self.metrics.add_to_stream(MetricInfo(self.TYPE_INCREMENT, kwargs))
+        self.metrics.add_to_stream(MetricInfo(self.TYPE_INCREMENT, self.name, kwargs))
 
     def value(self, value: int, **kwargs):
-        self.metrics.add_to_stream(MetricInfo(self.TYPE_VALUE, kwargs, value))
+        self.metrics.add_to_stream(MetricInfo(self.TYPE_VALUE, self.name, kwargs, value))
