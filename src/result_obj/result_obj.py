@@ -20,6 +20,8 @@ from result_obj.logging_handler import SqliteHandler
 
 
 class DataTypes:
+    text = "text"
+    binary = "binary"
     pickle = "cpython_pickle"
 
 
@@ -53,6 +55,7 @@ class ResultObj:
         self.status_handler = StatusHandler(self.db)
         self._result = None
         self._restore_point = None
+        self.result_type = DataTypes.pickle
 
     def _init_sqlite_logging_handler(self):
         sqlite_handler = SqliteHandler(logging.DEBUG, self.db)
@@ -143,7 +146,7 @@ class ResultObj:
         cursor.execute("DELETE FROM Result")
         cursor.execute(
             "INSERT INTO Result(timestamp, type, result) VALUES (?, ?, ?)",
-            (time.time(), DataTypes.pickle, self._sqlite_blob_encode(value)),
+            (time.time(), self.result_type, self._sqlite_blob_encode(value)),
         )
 
         self.db.commit()
