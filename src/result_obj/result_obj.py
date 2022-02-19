@@ -21,7 +21,6 @@ from result_obj.logging_handler import SqliteHandler
 
 class DataTypes:
     pickle = "cpython_pickle"
-    binary = "binary"
 
 
 class ResultObj:
@@ -262,14 +261,14 @@ class ResultObj:
 
     def _save_mem_disc_metrics(self):
         mem_info = psutil.virtual_memory()
-        self.metrics._mem_total = mem_info.total
-        self.metrics._mem_available = mem_info.available
-        self.metrics._mem_percent = mem_info.percent
+        self.metrics.debug_mem_total.value(mem_info.total)
+        self.metrics.debug_mem_available.value(mem_info.available)
+        self.metrics.debug_mem_percent.value(mem_info.percent)
 
         disc_info = psutil.disk_usage(os.getcwd())
-        self.metrics._disc_total = disc_info.total
-        self.metrics._disc_free = disc_info.free
-        self.metrics._disc_percent = disc_info.percent
+        self.metrics.debug_disc_total.value(disc_info.total)
+        self.metrics.debug_disc_free.value(disc_info.free)
+        self.metrics.debug_disc_percent.value(disc_info.percent)
 
     def __del__(self):
         self._sqlite_logging_handler.flush()
