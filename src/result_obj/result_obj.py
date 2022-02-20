@@ -264,12 +264,10 @@ class ResultObj:
 
     def _save_mem_disc_metrics(self):
         mem_info = psutil.virtual_memory()
-        self.metrics.debug_mem_total.value(mem_info.total)
         self.metrics.debug_mem_available.value(mem_info.available)
         self.metrics.debug_mem_percent.value(mem_info.percent)
 
         disc_info = psutil.disk_usage(os.getcwd())
-        self.metrics.debug_disc_total.value(disc_info.total)
         self.metrics.debug_disc_free.value(disc_info.free)
         self.metrics.debug_disc_percent.value(disc_info.percent)
 
